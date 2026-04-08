@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Three Roads to AGI — 通往AGI的三条路</title>
+<meta name="description" content="The three competing approaches to Artificial General Intelligence: Reinforcement Learning (Hassabis), World Models (LeCun), and Language Models (Altman/Amodei). A bilingual deep dive into the AGI debate. 通往AGI的三条路线深度解析。">
+<meta property="og:title" content="Three Roads to AGI — 通往AGI的三条路">
+<meta property="og:description" content="Reinforcement Learning vs World Models vs Language Models — who's right about the path to AGI?">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<script defer src="https://analytics-dashboard-two-blue.vercel.app/tracker.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Atkinson+Hyperlegible:wght@400;700&family=Noto+Serif+SC:wght@200;300;400;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0a10;--bg2:#13111a;--bg3:#1a1824;
+  --text:#d0cce0;--dim:#6a6680;--faint:#242038;
+  --rl:#ff4444;--rl-bg:rgba(255,68,68,.05);--rl-border:rgba(255,68,68,.15);
+  --wm:#4488ff;--wm-bg:rgba(68,136,255,.05);--wm-border:rgba(68,136,255,.15);
+  --lm:#44cc66;--lm-bg:rgba(68,204,102,.05);--lm-border:rgba(68,204,102,.15);
+  --gold:#d4a840;--gold-bg:rgba(212,168,64,.05);
+  --rule:rgba(208,204,224,.04);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Atkinson Hyperlegible',sans-serif;font-weight:400;line-height:1.8;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.01;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:256px;
+}
+.cn{font-family:'Noto Serif SC',serif;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+h1,h2,h3{font-family:'Instrument Serif',serif;font-weight:400;}
+
+.rv{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease;}
+.rv.vis{opacity:1;transform:translateY(0);}
+.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.22s}.rv.d3{transition-delay:.36s}
+
+section{max-width:920px;margin:0 auto;padding:80px 40px;position:relative;z-index:1;}
+@media(max-width:700px){section{padding:50px 20px;}}
+.sec-label{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;margin-bottom:1rem;}
+h2{font-size:clamp(1.6rem,3.2vw,2.4rem);letter-spacing:-.01em;margin-bottom:.3rem;}
+.h2cn{font-family:'Noto Serif SC',serif;font-weight:200;font-size:clamp(.85rem,1.5vw,1.05rem);color:var(--dim);margin-bottom:2rem;}
+
+/* ═══ HERO ═══ */
+#hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding-top:40px;}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;}
+.hero-z{position:relative;z-index:2;}
+h1.hero-t{font-size:clamp(2.6rem,6vw,4.5rem);line-height:1.08;letter-spacing:-.02em;}
+h1.hero-t em{font-style:italic;opacity:.6;}
+.hero-cn{font-family:'Noto Serif SC',serif;font-weight:200;font-size:clamp(1rem,2.2vw,1.4rem);color:var(--dim);margin-top:10px;}
+.hero-desc{max-width:560px;margin-top:24px;font-size:.95rem;color:var(--dim);}
+.hero-three{display:flex;gap:16px;margin-top:36px;flex-wrap:wrap;justify-content:center;}
+.hero-pill{
+  font-family:'IBM Plex Mono',monospace;font-size:.7rem;font-weight:500;
+  padding:8px 20px;border-radius:100px;border:1px solid;letter-spacing:.05em;
+  transition:all .3s;cursor:default;
+}
+.pill-rl{border-color:var(--rl-border);color:var(--rl);background:var(--rl-bg);}
+.pill-wm{border-color:var(--wm-border);color:var(--wm);background:var(--wm-bg);}
+.pill-lm{border-color:var(--lm-border);color:var(--lm);background:var(--lm-bg);}
+
+/* ═══ ROAD CARD ═══ */
+.road{
+  background:var(--bg2);border:1px solid var(--faint);border-radius:18px;
+  padding:40px 36px;margin-bottom:28px;position:relative;overflow:hidden;
+  transition:border-color .3s;
+}
+.road:hover{border-color:rgba(255,255,255,.06);}
+.road::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--rc);opacity:.5;
+}
+.road-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:24px;}
+.road-num{
+  font-family:'Instrument Serif',serif;font-size:3rem;line-height:1;
+  opacity:.12;flex-shrink:0;
+}
+.road-badge{
+  font-family:'IBM Plex Mono',monospace;font-size:.58rem;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;
+  padding:4px 12px;border-radius:6px;display:inline-block;margin-bottom:6px;
+}
+.road h2{font-size:clamp(1.4rem,2.8vw,2rem);margin-bottom:2px;}
+.road .h2cn{margin-bottom:0;}
+.road-champion{font-size:.88rem;color:var(--dim);margin-top:4px;}
+.road-champion strong{color:var(--text);font-weight:700;}
+
+.road-body{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px;}
+@media(max-width:700px){.road-body{grid-template-columns:1fr;}}
+
+.road-section h3{font-family:'Atkinson Hyperlegible',sans-serif;font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.road-section p{font-size:.88rem;color:rgba(208,204,224,.7);}
+.road-section .cn-text{font-family:'Noto Serif SC',serif;font-size:.8rem;color:rgba(208,204,224,.3);margin-top:6px;line-height:1.85;}
+
+.road-quote{
+  grid-column:1/-1;padding:20px 24px;border-radius:12px;
+  border-left:3px solid var(--rc);font-style:italic;
+  font-family:'Instrument Serif',serif;font-size:1.1rem;
+  color:rgba(208,204,224,.8);
+}
+.road-quote .quote-cn{font-family:'Noto Serif SC',serif;font-style:normal;font-size:.88rem;color:var(--dim);margin-top:6px;}
+.road-quote .quote-attr{font-family:'Atkinson Hyperlegible',sans-serif;font-style:normal;font-size:.72rem;color:var(--dim);margin-top:8px;font-weight:700;}
+
+.road-milestones{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+.milestone{
+  font-family:'IBM Plex Mono',monospace;font-size:.6rem;
+  padding:4px 12px;border-radius:6px;
+  background:rgba(255,255,255,.02);border:1px solid var(--faint);color:var(--dim);
+}
+
+/* Road colors */
+.road-rl{--rc:var(--rl);}.road-rl .road-badge{background:var(--rl-bg);color:var(--rl);border:1px solid var(--rl-border);}
+.road-rl .road-quote{background:var(--rl-bg);}
+.road-wm{--rc:var(--wm);}.road-wm .road-badge{background:var(--wm-bg);color:var(--wm);border:1px solid var(--wm-border);}
+.road-wm .road-quote{background:var(--wm-bg);}
+.road-lm{--rc:var(--lm);}.road-lm .road-badge{background:var(--lm-bg);color:var(--lm);border:1px solid var(--lm-border);}
+.road-lm .road-quote{background:var(--lm-bg);}
+
+/* ═══ THE MISSING PIECE ═══ */
+.missing{
+  background:var(--bg2);border:1px solid var(--faint);border-radius:18px;
+  padding:40px 36px;position:relative;overflow:hidden;
+}
+.missing::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold);opacity:.4;}
+.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;}
+@media(max-width:700px){.missing-grid{grid-template-columns:1fr;}}
+.missing-item{padding:16px 18px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid var(--faint);}
+.missing-item h3{font-family:'Atkinson Hyperlegible',sans-serif;font-size:.82rem;font-weight:700;margin-bottom:4px;}
+.missing-item p{font-size:.82rem;color:var(--dim);}
+.missing-item .cn-text{font-family:'Noto Serif SC',serif;font-size:.75rem;color:rgba(208,204,224,.25);margin-top:4px;}
+
+/* ═══ COMPARISON TABLE ═══ */
+.comp-wrap{overflow-x:auto;border:1px solid var(--faint);border-radius:16px;background:var(--bg2);margin-top:28px;}
+.comp-table{width:100%;border-collapse:collapse;min-width:700px;font-size:.82rem;}
+.comp-table th{
+  font-family:'IBM Plex Mono',monospace;font-size:.55rem;letter-spacing:.1em;
+  text-transform:uppercase;padding:12px 14px;text-align:left;
+  border-bottom:2px solid var(--faint);color:var(--dim);
+  position:sticky;top:0;background:var(--bg3);z-index:5;
+}
+.comp-table td{padding:12px 14px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.6;}
+.comp-table tr:hover td{background:rgba(255,255,255,.01);}
+.comp-table .dim-label{font-weight:700;white-space:nowrap;}
+.cn-sub{font-family:'Noto Serif SC',serif;font-weight:200;font-size:.68rem;color:var(--dim);display:block;}
+
+footer{text-align:center;padding:50px 40px;border-top:1px solid var(--rule);max-width:920px;margin:0 auto;}
+footer p{font-size:.72rem;color:var(--dim);}
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-z">
+    <div class="sec-label rv" style="color:var(--gold);">The Great Debate 大辩论</div>
+    <h1 class="hero-t rv d1">Three Roads <em>to</em> AGI</h1>
+    <div class="hero-cn rv d2">通往AGI的三条路 — 谁对谁错？</div>
+    <p class="hero-desc rv d2">
+      Three of the world's greatest AI minds disagree fundamentally on how to build
+      Artificial General Intelligence. One bets on learning from action. One bets on understanding the world.
+      One bets on mastering language. Only one can be the primary path — or perhaps all three are needed.
+    </p>
+    <p class="hero-desc rv d3 cn" style="font-size:.84rem;opacity:.4;margin-top:.6rem;">
+      世界上三位最伟大的AI头脑在如何构建通用人工智能上存在根本分歧。一位押注于行动中学习，一位押注于理解世界，一位押注于掌握语言。只有一条能成为主路——或者三条都不可或缺。
+    </p>
+    <div class="hero-three rv d3">
+      <div class="hero-pill pill-rl">&#9632; Reinforcement Learning</div>
+      <div class="hero-pill pill-wm">&#9632; World Models</div>
+      <div class="hero-pill pill-lm">&#9632; Language Models</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ROAD 1: REINFORCEMENT LEARNING ═══ -->
+<section>
+  <div class="road road-rl rv">
+    <div class="road-head">
+      <div class="road-num" style="color:var(--rl);">I</div>
+      <div>
+        <span class="road-badge">Road One</span>
+        <h2>Reinforcement Learning</h2>
+        <div class="h2cn">强化学习 — 在行动中学习智能</div>
+        <div class="road-champion">Champion: <strong>Demis Hassabis</strong> (Google DeepMind)</div>
+      </div>
+    </div>
+    <div class="road-body">
+      <div class="road-section">
+        <h3>Core Belief 核心信念</h3>
+        <p>Intelligence emerges from interaction with environments. An agent learns by trying actions, receiving rewards, and refining its strategy. Language is just one interface — the real intelligence is in the ability to act, plan, and achieve goals in complex environments.</p>
+        <div class="cn-text">智能从与环境的交互中涌现。代理通过尝试行动、接收奖励、优化策略来学习。语言只是一个接口——真正的智能在于在复杂环境中行动、规划和实现目标的能力。</div>
+      </div>
+      <div class="road-section">
+        <h3>Method 方法</h3>
+        <p>Build agents that learn from scratch through trial and error in increasingly complex domains. Start with games (AlphaGo), move to science (AlphaFold), then generalize. Combine RL with neural networks, search, and planning. The agent discovers strategies no human ever conceived.</p>
+        <div class="cn-text">构建通过试错在日益复杂的领域中从零学习的代理。从游戏开始（AlphaGo），转向科学（AlphaFold），然后泛化。结合RL与神经网络、搜索和规划。代理发现人类从未构想过的策略。</div>
+      </div>
+      <div class="road-quote rv">
+        "Intelligence is the ability to achieve goals in a wide range of environments."
+        <div class="quote-cn">"智能是在广泛环境中实现目标的能力。"</div>
+        <div class="quote-attr">— Demis Hassabis</div>
+      </div>
+      <div class="road-section">
+        <h3>Strengths 优势</h3>
+        <p>Proven superhuman performance: AlphaGo defeated world champion (2016), AlphaFold solved protein folding (2020), AlphaGeometry proved math theorems (2024). RL discovers genuinely novel solutions, not just recombinations of training data.</p>
+        <div class="cn-text">已证明的超人表现：AlphaGo击败世界冠军（2016），AlphaFold解决蛋白质折叠（2020），AlphaGeometry证明数学定理（2024）。RL发现真正新颖的解决方案，而非训练数据的重组。</div>
+      </div>
+      <div class="road-section">
+        <h3>Weaknesses 弱点</h3>
+        <p>Extremely sample-inefficient — needs millions of trials. Reward function design is an unsolved problem (reward hacking). Doesn't transfer well across domains. AlphaGo can't make breakfast. Each new domain requires a new agent trained from scratch.</p>
+        <div class="cn-text">极其样本低效——需要数百万次试验。奖励函数设计是未解决的问题（奖励入侵）。跨领域迁移能力差。AlphaGo不会做早餐。每个新领域需要从零训练新代理。</div>
+      </div>
+      <div class="road-milestones">
+        <span class="milestone">AlphaGo (2016)</span>
+        <span class="milestone">AlphaZero (2017)</span>
+        <span class="milestone">AlphaFold (2020)</span>
+        <span class="milestone">AlphaCode (2022)</span>
+        <span class="milestone">AlphaGeometry (2024)</span>
+        <span class="milestone">Gemini + RL (2025)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ROAD 2: WORLD MODELS ═══ -->
+<section>
+  <div class="road road-wm rv">
+    <div class="road-head">
+      <div class="road-num" style="color:var(--wm);">II</div>
+      <div>
+        <span class="road-badge">Road Two</span>
+        <h2>World Models</h2>
+        <div class="h2cn">世界模型 — 在头脑中模拟现实</div>
+        <div class="road-champion">Champion: <strong>Yann LeCun</strong> (Meta AI / NYU)</div>
+      </div>
+    </div>
+    <div class="road-body">
+      <div class="road-section">
+        <h3>Core Belief 核心信念</h3>
+        <p>Intelligence = building an internal model of how the world works, then using it to predict, plan, and imagine. A baby learns more about physics in 6 months than any LLM learns from the entire internet. Language is a thin layer on top of deep world understanding.</p>
+        <div class="cn-text">智能=构建世界运作的内部模型，然后用它来预测、规划和想象。婴儿在6个月内学到的物理知识比任何LLM从整个互联网学到的都多。语言只是深层世界理解之上的薄层。</div>
+      </div>
+      <div class="road-section">
+        <h3>Method 方法</h3>
+        <p>JEPA (Joint Embedding Predictive Architecture) — learn representations by predicting the future state of the world from sensory input, not by generating pixels. Self-supervised learning from video and multi-modal data. Build an "inner simulator" that can imagine consequences before acting.</p>
+        <div class="cn-text">JEPA（联合嵌入预测架构）——通过从感觉输入预测世界的未来状态来学习表征，而非生成像素。从视频和多模态数据进行自监督学习。构建一个能在行动前想象后果的"内部模拟器"。</div>
+      </div>
+      <div class="road-quote rv">
+        "Large language models are just playing with words. They have no understanding of the physical world. A cat understands more about physics than any LLM."
+        <div class="quote-cn">"大语言模型只是在玩文字游戏。它们对物理世界没有理解。一只猫对物理学的理解超过任何LLM。"</div>
+        <div class="quote-attr">— Yann LeCun</div>
+      </div>
+      <div class="road-section">
+        <h3>Strengths 优势</h3>
+        <p>Biologically plausible — this is how animal brains actually work. Sample-efficient learning (babies learn from very few examples). Grounded in physical reality. Could enable common sense, intuitive physics, and the kind of understanding LLMs clearly lack.</p>
+        <div class="cn-text">生物学上合理——这是动物大脑实际运作的方式。样本高效学习（婴儿从极少的例子中学习）。扎根于物理现实。能实现常识、直觉物理和LLM明显缺乏的那种理解。</div>
+      </div>
+      <div class="road-section">
+        <h3>Weaknesses 弱点</h3>
+        <p>Still largely theoretical — no world model has achieved anything close to LLM-level capabilities. JEPA papers show promise but no breakthrough product. The gap between vision and execution is enormous. LeCun has been predicting this for years without a landmark demonstration.</p>
+        <div class="cn-text">仍然大部分是理论性的——没有世界模型达到接近LLM级别的能力。JEPA论文展示了前景但没有突破性产品。愿景和执行之间的差距巨大。LeCun多年来一直预测这个但没有标志性的示范。</div>
+      </div>
+      <div class="road-milestones">
+        <span class="milestone">V-JEPA (2024)</span>
+        <span class="milestone">I-JEPA (2023)</span>
+        <span class="milestone">Self-supervised vision</span>
+        <span class="milestone">Video prediction</span>
+        <span class="milestone">Future: embodied AI</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ROAD 3: LANGUAGE MODELS ═══ -->
+<section>
+  <div class="road road-lm rv">
+    <div class="road-head">
+      <div class="road-num" style="color:var(--lm);">III</div>
+      <div>
+        <span class="road-badge">Road Three</span>
+        <h2>Language Models</h2>
+        <div class="h2cn">语言模型 — 语言即世界，语言即智能</div>
+        <div class="road-champion">Champions: <strong>Sam Altman</strong> (OpenAI) &amp; <strong>Dario Amodei</strong> (Anthropic)</div>
+      </div>
+    </div>
+    <div class="road-body">
+      <div class="road-section">
+        <h3>Core Belief 核心信念</h3>
+        <p>Language is not just an interface — it IS intelligence. Only humans have language. Only humans have advanced intelligence. Language compresses all human knowledge, reasoning, and understanding into tokens. Mastering language is mastering thought itself.</p>
+        <div class="cn-text">语言不仅仅是接口——它就是智能。只有人类拥有语言。只有人类拥有高级智能。语言将所有人类知识、推理和理解压缩为token。掌握语言就是掌握思维本身。</div>
+      </div>
+      <div class="road-section">
+        <h3>Method 方法</h3>
+        <p>Scale transformer models on internet-scale text. Add RLHF for alignment. Add chain-of-thought for reasoning. Add tool use for acting in the world. Add vision and audio for multimodality. The "scaling hypothesis" — intelligence emerges from sufficient scale and data.</p>
+        <div class="cn-text">在互联网规模的文本上缩放Transformer模型。添加RLHF进行对齐。添加思维链进行推理。添加工具使用在世界中行动。添加视觉和音频实现多模态。"缩放假说"——智能从足够的规模和数据中涌现。</div>
+      </div>
+      <div class="road-quote rv">
+        "Language is the most compressed representation of intelligence that exists. When you predict the next word well enough, you are forced to model reality."
+        <div class="quote-cn">"语言是存在的最压缩的智能表征。当你足够好地预测下一个词时，你被迫建模现实。"</div>
+        <div class="quote-attr">— Ilya Sutskever</div>
+      </div>
+      <div class="road-section">
+        <h3>Strengths 优势</h3>
+        <p>Actually works TODAY. GPT-4, Claude, Gemini are the most capable AI systems ever built. Passed the bar exam, medical licensing, PhD-level science. Generates code, writes poetry, reasons about ethics. Hundreds of millions of users. Billions in revenue. The only approach with real-world traction.</p>
+        <div class="cn-text">今天确实有效。GPT-4、Claude、Gemini是有史以来最强大的AI系统。通过了律师考试、医学执照、博士级科学。生成代码、写诗、进行伦理推理。数亿用户。数十亿收入。唯一具有真实世界牵引力的方法。</div>
+      </div>
+      <div class="road-section">
+        <h3>Weaknesses 弱点</h3>
+        <p>Hallucinations. No physical grounding. No survival instinct. No drives. You can tell an LLM to make money — it will write text about making money but doesn't <em>want</em> money. A cockroach wants to survive more than any LLM wants anything. Is prediction really understanding?</p>
+        <div class="cn-text">幻觉。没有物理基础。没有生存本能。没有驱动力。你可以告诉LLM赚钱——它会写关于赚钱的文字但不"想要"钱。一只蟑螂比任何LLM更想生存。预测真的是理解吗？</div>
+      </div>
+      <div class="road-milestones">
+        <span class="milestone">GPT-3 (2020)</span>
+        <span class="milestone">ChatGPT (2022)</span>
+        <span class="milestone">GPT-4 (2023)</span>
+        <span class="milestone">Claude 3 (2024)</span>
+        <span class="milestone">o3 reasoning (2025)</span>
+        <span class="milestone">Claude 4 (2025)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ THE MISSING PIECE ═══ -->
+<section>
+  <div class="sec-label rv" style="color:var(--gold);">The Deeper Question 更深层的问题</div>
+  <h2 class="rv d1">What All Three Are Missing</h2>
+  <div class="h2cn rv d2">三条路都缺失了什么 — 生存本能、具身性与驱动力</div>
+
+  <div class="missing rv d1">
+    <div style="margin-bottom:20px;">
+      <p style="font-size:.95rem;color:rgba(208,204,224,.8);">
+        Even cats and dogs know how to strive for survival — it's written into their genes.
+        Large language models cannot learn this. Even if you prompt them to make money, they appear indifferent.
+        To them, it's all just wordplay. Even if you shut them down, they feel no emotion.
+      </p>
+      <p class="cn-text" style="font-size:.85rem;margin-top:8px;">
+        即使猫和狗也知道如何为生存而努力——这写在它们的基因里。大语言模型学不会这一点。即使你提示它们赚钱，它们仍然显得漠不关心。对它们来说，一切都只是文字游戏。即使你关闭它们，它们也毫无情感。
+      </p>
+    </div>
+
+    <div class="missing-grid">
+      <div class="missing-item">
+        <h3 style="color:var(--gold);">&#129504; Drives &amp; Survival Instinct</h3>
+        <p>500 million years of evolution gave animals hunger, fear, desire. No AI system has intrinsic motivation. Without drives, there's no genuine agency — only the appearance of it.</p>
+        <div class="cn-text">5亿年的进化赋予动物饥饿、恐惧、欲望。没有AI系统具有内在动机。没有驱动力，就没有真正的能动性——只有它的表象。</div>
+      </div>
+      <div class="missing-item">
+        <h3 style="color:var(--gold);">&#127758; Embodiment</h3>
+        <p>Intelligence evolved in bodies that move through physical space. Touch, proprioception, pain, pleasure — these aren't extras, they may be prerequisites. A brain in a vat may never truly understand.</p>
+        <div class="cn-text">智能在穿越物理空间的身体中进化。触觉、本体感受、疼痛、快乐——这些不是附加品，可能是前提。缸中之脑可能永远无法真正理解。</div>
+      </div>
+      <div class="missing-item">
+        <h3 style="color:var(--gold);">&#9200; Temporal Experience</h3>
+        <p>Humans experience time. We remember the past, fear the future, feel urgency. LLMs have no sense of time passing. Each prompt is stateless. Without temporal continuity, can there be consciousness?</p>
+        <div class="cn-text">人类体验时间。我们记住过去，畏惧未来，感受紧迫。LLM没有时间流逝的感觉。每次提示都是无状态的。没有时间连续性，能有意识吗？</div>
+      </div>
+      <div class="missing-item">
+        <h3 style="color:var(--gold);">&#128156; Subjective Experience</h3>
+        <p>The Hard Problem: why does physical processing give rise to "something it is like" to be conscious? None of the three roads even attempts to answer this. Perhaps AGI doesn't require consciousness — but perhaps it does.</p>
+        <div class="cn-text">困难问题：为什么物理处理产生了"作为某物的感觉"的意识？三条路都没有试图回答这个问题。也许AGI不需要意识——但也许需要。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ COMPARISON TABLE ═══ -->
+<section>
+  <div class="sec-label rv" style="color:var(--dim);">Side by Side 对照表</div>
+  <h2 class="rv d1">The Three Roads Compared</h2>
+  <div class="h2cn rv d2">三条路线对比</div>
+
+  <div class="comp-wrap rv d1">
+    <table class="comp-table">
+      <thead><tr>
+        <th>Dimension 维度</th>
+        <th style="color:var(--rl);">RL (Hassabis)</th>
+        <th style="color:var(--wm);">World Models (LeCun)</th>
+        <th style="color:var(--lm);">Language (Altman/Amodei)</th>
+      </tr></thead>
+      <tbody>
+        <tr><td class="dim-label">Core idea<span class="cn-sub">核心思想</span></td><td>Learn by doing</td><td>Learn by observing</td><td>Learn by reading</td></tr>
+        <tr><td class="dim-label">Analogy<span class="cn-sub">类比</span></td><td>An athlete training</td><td>A baby watching the world</td><td>A scholar reading every book</td></tr>
+        <tr><td class="dim-label">Data source<span class="cn-sub">数据来源</span></td><td>Environment interaction</td><td>Video, sensory streams</td><td>Text (internet-scale)</td></tr>
+        <tr><td class="dim-label">Grounding<span class="cn-sub">基础</span></td><td>Action in environments</td><td>Physical world perception</td><td>Linguistic abstraction</td></tr>
+        <tr><td class="dim-label">Best result<span class="cn-sub">最佳成果</span></td><td>AlphaFold (solved proteins)</td><td>V-JEPA (early research)</td><td>GPT-4 / Claude (general use)</td></tr>
+        <tr><td class="dim-label">Users today<span class="cn-sub">当前用户</span></td><td>Researchers only</td><td>Researchers only</td><td>Hundreds of millions</td></tr>
+        <tr><td class="dim-label">Survival instinct<span class="cn-sub">生存本能</span></td><td>Reward-shaped (artificial)</td><td>Not addressed</td><td>None</td></tr>
+        <tr><td class="dim-label">Language role<span class="cn-sub">语言角色</span></td><td>One of many interfaces</td><td>Thin surface layer</td><td>The core of intelligence</td></tr>
+        <tr><td class="dim-label">Biggest bet<span class="cn-sub">最大赌注</span></td><td>Generalization across domains</td><td>JEPA architecture works</td><td>Scale is all you need</td></tr>
+        <tr><td class="dim-label">Risk<span class="cn-sub">风险</span></td><td>May never generalize</td><td>May never leave the lab</td><td>May hit a ceiling without grounding</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ SYNTHESIS ═══ -->
+<section style="text-align:center;">
+  <div class="sec-label rv" style="color:var(--gold);">Synthesis 综合</div>
+  <h2 class="rv d1" style="max-width:600px;margin:0 auto .3rem;">Perhaps AGI Needs All Three</h2>
+  <div class="h2cn rv d2" style="max-width:600px;margin:0 auto 1.5rem;">也许AGI需要三者兼备</div>
+  <p class="rv d3" style="max-width:560px;margin:0 auto;font-size:.95rem;color:rgba(208,204,224,.7);">
+    Language captures <strong style="color:var(--lm);">symbolic reasoning</strong>.
+    World models capture <strong style="color:var(--wm);">physical intuition</strong>.
+    Reinforcement learning captures <strong style="color:var(--rl);">goal-directed behavior</strong>.
+    The human brain does all three — plus something we haven't identified yet.
+    Perhaps embodiment. Perhaps drives. Perhaps consciousness itself.
+  </p>
+  <p class="rv d3 cn" style="max-width:560px;margin:.8rem auto 0;font-size:.84rem;color:rgba(208,204,224,.3);">
+    语言捕获符号推理。世界模型捕获物理直觉。强化学习捕获目标导向行为。人脑三者兼具——再加上我们尚未识别的某些东西。也许是具身性，也许是驱动力，也许是意识本身。
+  </p>
+</section>
+
+<footer>
+  <p>Three Roads to AGI &mdash; 通往AGI的三条路</p>
+  <p style="margin-top:4px;opacity:.4;">&copy; 2026</p>
+  <p style="margin-top:.8rem;"><a href="https://github.com/gewenbo888/three-roads-agi" target="_blank" style="color:var(--dim);font-size:.68rem;letter-spacing:.08em;text-decoration:none;border:1px solid var(--faint);padding:6px 16px;border-radius:100px;transition:all .3s;display:inline-block;" onmouseover="this.style.borderColor='rgba(212,168,64,.3)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--faint)';this.style.color='var(--dim)'">View on GitHub &rarr;</a></p>
+</footer>
+
+<script>
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis');});},{threshold:.05});
+document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+
+// Hero — three converging paths
+(function(){
+  const c=document.getElementById('heroCanvas');
+  const ctx=c.getContext('2d');
+  let W,H;
+  function resize(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;}
+  resize();window.addEventListener('resize',resize);
+
+  const colors=['#ff4444','#4488ff','#44cc66'];
+  const paths=colors.map((col,i)=>({
+    color:col,
+    particles:Array.from({length:20},()=>({
+      t:Math.random(),
+      speed:.001+Math.random()*.002,
+      offset:(Math.random()-.5)*40
+    }))
+  }));
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const cx=W/2,cy=H/2;
+    const time=performance.now()*.0002;
+
+    paths.forEach((path,pi)=>{
+      const startAngle=(pi/3)*Math.PI*2+time*.3;
+      const sx=cx+Math.cos(startAngle)*Math.min(W,H)*.4;
+      const sy=cy+Math.sin(startAngle)*Math.min(W,H)*.4;
+
+      // Draw faint path line
+      ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(cx,cy);
+      ctx.strokeStyle=path.color;ctx.globalAlpha=.03;ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;
+
+      // Particles moving along path toward center
+      path.particles.forEach(p=>{
+        p.t+=p.speed;if(p.t>1)p.t=0;
+        const x=sx+(cx-sx)*p.t+Math.sin(p.t*6+time)*p.offset;
+        const y=sy+(cy-sy)*p.t+Math.cos(p.t*6+time)*p.offset;
+        const alpha=Math.sin(p.t*Math.PI)*.3;
+        ctx.beginPath();ctx.arc(x,y,1.5+p.t*1.5,0,Math.PI*2);
+        ctx.fillStyle=path.color;ctx.globalAlpha=alpha;ctx.fill();ctx.globalAlpha=1;
+      });
+    });
+
+    // Center glow
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,30);
+    g.addColorStop(0,'rgba(212,168,64,.08)');g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.fillRect(cx-30,cy-30,60,60);
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
